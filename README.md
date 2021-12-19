@@ -4,9 +4,9 @@
 >
 >  前端采用freemarker
 
-☯gitee：
+☯gitee：https://gitee.com/zybfsyqs/ssm-metting
 
-☯github：
+☯github：https://github.com/zybfsyqs/ssm-metting
 
 
 
@@ -52,18 +52,3 @@
 - Ajax
 - Mysql
 - druid
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
