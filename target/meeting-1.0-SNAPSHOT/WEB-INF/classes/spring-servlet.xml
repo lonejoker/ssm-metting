@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:mvc="http://www.springframework.org/schema/mvc"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc https://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+	<!--组件扫描-->
+	<context:component-scan base-package="com.xiaobai" use-default-filters="false">
+		<!--扫描controller-->
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+	</context:component-scan>
+
+	<bean class="org.springframework.format.support.FormattingConversionServiceFactoryBean" id="conversionService">
+		<property name="converters">
+			<set>
+				<ref bean="dateConverter"/>
+			</set>
+		</property>
+	</bean>
+
+	<bean class="com.xiaobai.converter.DateConverter" id="dateConverter"/>
+
+	<!--注解驱动-->
+	<mvc:annotation-driven conversion-service="conversionService">
+	</mvc:annotation-driven>
+
+	<!--访问静态资源-->
+	<mvc:resources mapping="/**" location="/"/>
+
+	<!--拦截器-->
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**"/>
+			<!--排除静态资源-->
+			<mvc:exclude-mapping path="/images/**"/>
+			<mvc:exclude-mapping path="/styles/**"/>
+			<mvc:exclude-mapping path="/My97DatePicker/**"/>
+			<bean class="com.xiaobai.interceptor.PermissInterceptor"/>
+		</mvc:interceptor>
+	</mvc:interceptors>
+
+	<!--<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">-->
+	<!--    <property name="locations">-->
+	<!--        <list>-->
+	<!--            <value>classpath:freemarker-var.properties</value>-->
+	<!--        </list>-->
+	<!--    </property>-->
+	<!--</bean>-->
+
+	<!-- 配置模板基本属性 -->
+	<bean class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer" id="freeMarkerConfigurer">
+		<!-- 模板文件位置 -->
+		<property name="templateLoaderPath" value="/WEB-INF/ftl/"/>
+		<!-- 默认编码格式 -->
+		<property name="defaultEncoding" value="UTF-8"/>
+		<!-- 全局变量设置 -->
+		<property name="freemarkerVariables">
+			<map>
+				<entry key="root" value="${root}"/>
+			</map>
+		</property>
+		<!-- 基本格式配置：时间格式、数字格式 -->
+		<property name="freemarkerSettings">
+			<props>
+				<!-- 模版的缓存时间，单位是s，超过缓存时间则从磁盘加载最新的模版 -->
+				<prop key="template_update_delay">10</prop>
+				<!-- 设置默认地区，主要影响数字、日期输出格式，request中没有指定地区时模板查找的值 -->
+				<prop key="locale">zh_CN</prop>
+				<!-- 设置日期时间的输出格式 -->
+				<prop key="datetime_format">yyyy-MM-dd HH:mm:ss</prop>
+				<!-- 设置日期的输出格式 -->
+				<prop key="date_format">yyyy-MM-dd</prop>
+				<!-- 设置时间的输出格式 -->
+				<prop key="time_format">HH:mm:ss</prop>
+				<!-- 设置数字的输出格式 -->
+				<prop key="number_format">#.####</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- freemarker视图解析器配置 -->
+	<bean class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+		<!-- 视图解析器类 -->
+		<property name="viewClass" value="org.springframework.web.servlet.view.freemarker.FreeMarkerView"/>
+		<!-- 后缀配置 -->
+		<property name="suffix" value=".ftl"/>
+		<!-- 设置各种属性覆盖 -->
+		<!-- 允许重写Request属性 -->
+		<property name="allowRequestOverride" value="true"/>
+		<!-- 允许重写Session属性 -->
+		<property name="allowSessionOverride" value="true"/>
+		<!-- 设置request Attribute添加到模型 -->
+		<property name="exposeRequestAttributes" value="true"/>
+		<!-- 设置session Attribute添加到模型 -->
+		<property name="exposeSessionAttributes" value="true"/>
+		<!-- 页面内容类型 -->
+		<property name="contentType" value="text/html;charset=utf-8"/>
+	</bean>
+</beans>

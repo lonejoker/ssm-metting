@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaobai.mapper.DepartmentMapper">
+	<select id="getDepById" resultType="com.xiaobai.entity.Department">
+		select *
+		from department
+		where departmentid = #{departmentId}
+	</select>
+
+	<select id="getAllDeps" resultType="com.xiaobai.entity.Department">
+		select *
+		from department
+	</select>
+
+	<insert id="addDepartments">
+		insert into department(departmentname)
+		values (#{departmentName})
+	</insert>
+
+	<select id="getDepByName" resultType="com.xiaobai.entity.Department">
+		select *
+		from department
+		where departmentname = #{departmentName}
+	</select>
+
+	<delete id="deletedepById">
+		delete
+		from department
+		where departmentid = #{departmentId}
+	</delete>
+
+	<update id="updatedep">
+		update department
+		set departmentname = #{name}
+		where departmentid = #{id}
+	</update>
+</mapper>
