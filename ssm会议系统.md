@@ -1237,66 +1237,594 @@ top.ftl
         
 
 
-
-
-
-
-
 # 查看会议室
 
+- ```java
+    public class MeetingRoom {
+    
+        private Integer roomid;
+        private Integer roomnum;
+        private String roomname;
+        private Integer capacity;
+        private Integer status;
+        private  String description;
+    
+        public MeetingRoom() {
+        }
+    
+        public MeetingRoom(Integer roomid, Integer roomnum, String roomname, Integer capacity, Integer status, String description) {
+            this.roomid = roomid;
+            this.roomnum = roomnum;
+            this.roomname = roomname;
+            this.capacity = capacity;
+            this.status = status;
+            this.description = description;
+        }
+    
+        @Override
+        public String toString() {
+            return "MeetingRoom{" +
+                    "roomid=" + roomid +
+                    ", roomnum=" + roomnum +
+                    ", roomname='" + roomname + '\'' +
+                    ", capacity=" + capacity +
+                    ", status=" + status +
+                    ", description='" + description + '\'' +
+                    '}';
+        }
+        
+    }
+    ```
 
-
-
-
-
-
-
-
-
+- ```java
+    @Controller
+    public class MeetingRoomController {
+        @Autowired
+        private MeetingRoomService meetingRoomService;
+    
+        @RequestMapping("/meetingrooms")
+        public String getMeetingRoom(Model model) {
+            model.addAttribute("mrs", meetingRoomService.getAllmrs());
+            return "meetingrooms";
+        }
+    
+    }
+    
+    
+    
+    @Service
+    public class MeetingRoomService {
+    
+        @Autowired
+        private MeetingRoomMapper meetingRoomMapper;
+    
+        public List<MeetingRoom> getAllmrs() {
+            return meetingRoomMapper.getAllmrs();
+        }
+    }
+    
+    
+    
+    public interface MeetingRoomMapper {
+        List<MeetingRoom> getAllmrs();
+    }
+    
+    
+    
+    <?xml version="1.0" encoding="UTF-8" ?>
+    <!DOCTYPE mapper
+    		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+    <mapper namespace="com.xiaobai.mapper.MeetingRoomMapper">
+    
+    	<select id="getAllmrs" resultType="com.xiaobai.entity.MeetingRoom">
+    		select * from meetingroom
+    	</select>
+    
+    </mapper>
+        
+        
+        
+                        <#if mrs??>
+                            <#list mrs as mr>
+                                <tr>
+                                    <td>${mr.roomnum}</td>
+                                    <td>${mr.roomname}</td>
+                                    <td>${mr.capacity}</td>
+                                    <td>${(mr.status==0)?string('启用','已占用')}</td>
+                                    <td>
+                                        <a class="clickbutton" href="roomdetails.html">查看详情</a>
+                                    </td>
+                                </tr>
+                            </#list>
+                        </#if>
+    ```
 
 # 会议室详情
 
+- 显示
 
+    - ```html
+        <td>
+        <a class="clickbutton" href="/roomdetails?roomid=${mr.roomid}">查看详情</a>
+        </td>
+        ```
 
+    - ```java
+        @RequestMapping("/roomdetails")
+        public String roomdetails(Integer roomid, Model model) {
+            model.addAttribute("mr",meetingRoomService.getMrById(roomid));
+            return "roomdetails";
+        }
+        
+        
+        
+        public MeetingRoom getMrById(Integer roomid){
+            return meetingRoomMapper.getMrById(roomid);
+        }
+        
+        
+        
+        MeetingRoom getMrById(Integer roomid);
+        
+        
+        
+        <select id="getMrById" resultType="com.xiaobai.entity.MeetingRoom">
+            select * from meetingroom where roomid = #{roomid}
+        </select>
+        ```
 
+    - ```html
+        <tr>
+            <td>门牌号:</td>
+            <td>
+                <input id="roomnumber" type="text" value="${mr.roomnum}" maxlength="10"/>
+            </td>
+        </tr>
+        <tr>
+            <td>会议室名称:</td>
+            <td>
+                <input id="capacity" type="text" value="${mr.roomname}" maxlength="20"/>
+            </td>
+        </tr>
+        <tr>
+            <td>最多容纳人数：</td>
+            <td>
+                <input id="roomcapacity" type="text" value="${mr.capacity}"/>
+            </td>
+        </tr>
+        <tr>
+            <td>当前状态：</td>
+            <td>
+                <#if mr.status==0>
+                    <input type="radio" id="status" name="status" checked="checked" value="0"/><label for="status">启用</label>
+                    <input type="radio" id="status" name="status"/><label for="status" value="1">已占用</label>
+                    <#else>
+                        <input type="radio" id="status" name="status"value="0"/><label for="status">启用</label>
+                        <input type="radio" id="status" name="status" checked="checked"/><label for="status" value="1">已占用</label>
+                        </#if>
+                    </td>
+        </tr>
+        <tr>
+            <td>备注：</td>
+            <td>
+                <textarea id="description" maxlength="200" rows="5" cols="60" >${mr.description}</textarea>
+            </td>
+        </tr>
+        ```
 
+- 修改
 
+    - ```java
+        @RequestMapping("/updateroom")
+        public String updatemr(MeetingRoom meetingRoom) {
+            Integer result = meetingRoomService.updateroom(meetingRoom);
+            if (result == 1){
+                return "redirect:/meetingrooms";
+            }else {
+                return "forward:/roomdetails";
+            }
+        }
+        
+        
+        public Integer updateroom(MeetingRoom meetingRoom){
+            return meetingRoomMapper.updateroom(meetingRoom);
+        }
+        
+        
+        Integer updateroom(MeetingRoom meetingRoom);
+        
+        
+        <update id="updateroom">
+            update meetingroom
+            set roomnum     = #{roomnum},
+        roomname    = #{roomname},
+        capacity    = #{capacity},
+        status      = #{status},
+        description = #{description}
+        where roomid = #{roomid}
+        </update>
+        ```
 
-
-
-
-
-
-
-
-
-
+    - ```html
+        <form action="/updateroom" method="post">
+            <fieldset>
+                <legend>会议室信息</legend>
+                <table class="formtable">
+                    <tr>
+                        <td>门牌号:</td>
+                        <td>
+                            <input id="roomnumber" name="roomnum" type="text" value="${mr.roomnum}"
+                                   maxlength="10"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>会议室名称:</td>
+                        <td>
+                            <input id="capacity" name="roomname" type="text" value="${mr.roomname}"
+                                   maxlength="20"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>最多容纳人数：</td>
+                        <td>
+                            <input id="roomcapacity" name="capacity" type="text" value="${mr.capacity}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>当前状态：</td>
+                        <td>
+                            <#if mr.status==0>
+                                <input type="radio" id="status" name="status" checked="checked" value="0"/>
+                                <label
+                                       for="status">启用</label>
+                                <input type="radio" id="status" value="1" name="status"/><label
+                                                                                                for="status">已占用</label>
+                                <#else >
+                                    <input type="radio" id="status" name="status" value="0"/><label
+                                                                                                    for="status">启用</label>
+                                    <input type="radio" id="status" name="status" value="1" checked="checked"/>
+                                    <label for="status"
+                                           >已占用</label>
+                                    </#if>
+                                </td>
+                    </tr>
+                    <tr>
+                        <td>备注：</td>
+                        <td>
+                            <textarea id="description" name="description" maxlength="200" rows="5"
+                                      cols="60">${mr.description}</textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="command">
+                            <input type="hidden" value="${mr.roomid}" name="roomid">
+                            <input type="submit" value="确认修改" class="clickbutton"/>
+                            <input type="button" class="clickbutton" value="返回"
+                                   onclick="window.history.back();"/>
+                        </td>
+                    </tr>
+                </table>
+        ```
 
 # 添加会议室
 
+- ```java
+    @RequestMapping("/admin/addmeetingroom")
+    public String addmeetingroom(){
+        return "addmeetingroom";
+    }
+    
+    @RequestMapping("/admin/doAddMr")
+    public String doAddMr(MeetingRoom meetingRoom){
+        Integer result = meetingRoomService.doAddMr(meetingRoom);
+        return "redirect:/meetingrooms";
+    }
+    
+    
+    public Integer doAddMr(MeetingRoom meetingRoom){
+        return meetingRoomMapper.doAddMr(meetingRoom);
+    }
+    
+    
+    Integer doAddMr(MeetingRoom meetingRoom);
+    
+    
+    <insert id="doAddMr" parameterType="com.xiaobai.entity.MeetingRoom">
+        insert into meetingroom (roomnum, roomname, capacity, status, description)
+        values (#{roomnum}, #{roomname}, #{capacity}, #{status}, #{description})
+    </insert>
+    ```
 
-
-
-
-
-
-
-
-
-
-
-
-
+- ```html
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <title>CoolMeeting会议管理系统</title>
+            <link rel="stylesheet" href="/styles/common.css"/>
+        </head>
+        <#include 'top.ftl'>
+        <div class="page-body">
+            <#include 'leftMenu.ftl'>
+            <div class="page-content">
+                <div class="content-nav">
+                    会议预定 > 添加会议室
+                </div>
+                <form action="/admin/doAddMr" method="post">
+                    <fieldset>
+                        <legend>会议室信息</legend>
+                        <table class="formtable">
+                            <tr>
+                                <td>门牌号:</td>
+                                <td>
+                                    <input name="roomnum" id="roomnumber" type="text" placeholder="例如：201" maxlength="10"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>会议室名称:</td>
+                                <td>
+                                    <input name="roomname" id="capacity" type="text" placeholder="例如：第一会议室" maxlength="20"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>最多容纳人数：</td>
+                                <td>
+                                    <input name="capacity" id="roomcapacity" type="text" placeholder="填写一个正整数"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>当前状态：</td>
+                                <td>
+                                    <input type="radio" id="status" name="status" checked="checked" value="0"/><label
+                                            for="status">启用</label>
+                                    <input type="radio" id="status" name="status" value="1"/><label for="status">已占用</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>备注：</td>
+                                <td>
+                                    <textarea name="description" id="description" maxlength="200" rows="5" cols="60"
+                                              placeholder="200字以内的文字描述"></textarea>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" class="command">
+                                    <input type="submit" value="添加" class="clickbutton"/>
+                                    <input type="reset" value="重置" class="clickbutton"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+        </body>
+    </html>
+    ```
 
 # 会议室预定
 
+- 显示
 
+    - ```java
+        @Controller
+        public class MeetingControoler {
+        
+            @Autowired
+            private MeetingRoomService meetingRoomService;
+            @RequestMapping("/bookmeeting")
+            public String bookmeetin(Model model){
+                model.addAttribute("mrs",meetingRoomService.getAllmrs());
+                return "bookmeeting";
+            }
+        
+        }
+        ```
 
+    - ```html
+        <#list mrs as mr>
+        	<option value="${mr.roomid}">${mr.roomname}</option>
+        </#list>
+        ```
 
+- 添加依赖，显示列表
 
+    - ```xml
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.12.3</version>
+        </dependency>
+        ```
 
+    - ```html
+        <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
+        ```
 
+    - ```java
+            @Autowired
+            private DepartmentService departmentService;
+        
+        	@RequestMapping("/alldeps")
+            @ResponseBody
+            public List<Department> getallDempt(){
+                return departmentService.getAllDept();
+            }
+            
+            
+            
+                        function body_load() {
+                        selDepartments = document.getElementById("selDepartments");
+                        selEmployees = document.getElementById("selEmployees");
+                        selSelectedEmployees = document.getElementById("selSelectedEmployees");
+        
+                        $.get("/alldeps", function (data) {
+                            for (let i = 0; i < data.length; i++) {
+                                var item = data[i];
+                                var dep = document.createElement("option");
+                                dep.value = item.departmentId;
+                                dep.text = item.departmentName;
+                                selDepartments.appendChild(dep);
+                            }
+                            fillEmployees();
+                        })
+                    }
+        ```
 
+- 显示列表
 
+    - ```java
+            @RequestMapping("/getempbydepid")
+            @ResponseBody
+            public List<Employee> getempbydepid(Integer depid) {
+                return employeeService.getEmpByDepId(depid);
+            }
+        
+        
+            public List<Employee> getEmpByDepId(Integer depid){
+                return employeeMapper.getEmpByDepId(depid);
+            }
+        
+        
+        List<Employee> getEmpByDepId(Integer depid);
+        
+        
+        	<select id="getEmpByDepId" resultType="com.xiaobai.entity.Employee">
+        		select * from employee where departmentid = #{depid};
+        	</select>
+        ```
 
+    - ```html
+                    function fillEmployees() {
+                        clearList(selEmployees);
+                        var departmentid = selDepartments.options[selDepartments.selectedIndex].value;
+                        $.get("/getempbydepid?depid=" + departmentid,function (data){
+                            for (i = 0; i < data.length; i++) {
+                                var emp = document.createElement("option");
+                                emp.value = data[i].employeeid;
+                                emp.text = data[i].employeename;
+                                selEmployees.appendChild(emp);
+                            }
+                        })
+                    }
+                    
+                    
+                    
+                    opt.value = optEmployee.value;
+                        opt.text = optEmployee.text;
+                        //从左边到右边为选中
+                        opt.selected=true;
+                        if (insertIndex == -1) {
+        ```
+
+- 添加
+
+    - ![](\image-20211220104645595.png)
+
+    - ```xml
+        <!-- 排除静态资源 -->
+        			<mvc:exclude-mapping path="/images/**"/>
+        			<mvc:exclude-mapping path="/styles/**"/>
+        			
+        			
+        			<mvc:exclude-mapping path="/My97DatePicker/**"/>
+        			
+        			
+        			<bean class="com.xiaobai.interceptor.PermissInterceptor"/>
+        		</mvc:interceptor>
+        
+        bookmeeting.ftl添加
+        <script src="/My97DatePicker/WdatePicker.js"></script>
+        ```
+
+    - ```html
+        <tr>
+                                        <td>预计开始时间：</td>
+                                        <td>
+                                            <input type="text" class="Wdate" id="starttime" name="starttime" onclick="WdatePicker({dateFmt: yyyy-MM-dd HH:mmss})"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>预计结束时间：</td>
+                                        <td>
+                                            <input type="text" class="Wdate" id="endtime" name="endtime" onclick="WdatePicker({dateFmt: yyyy-MM-dd HH:mmss})"/>
+                                        </td>
+                                    </tr>
+        ```
+
+- 添加
+
+    - ```java
+        public class Meeting {
+            //会议ID
+            private Integer meetingid;
+            //会议名称
+            private String meetingname;
+            //房间号
+            private Integer roomid;
+            //谁预订的
+            private Integer reservationistid;
+            //参加人数
+            private Integer numberofparticipants;
+            //开始时间
+            private Date starttime;
+            //结束时间
+            private Date endtime;
+            //预约时间
+            private Date reservationtime;
+            //取消时间
+            private Date canceledtime;
+            //会议说明
+            private String description;
+            //状态（0启用  1已占用）
+            private Integer status;
+            //取消原因
+            private String canceledreason;
+            
+            
+            
+            
+            
+            
+            public class SearchMeeting {
+            //会议id
+            private Integer meetingid;
+            //会议名称
+            private String meetingname;
+            //房间号
+            private Integer roomid;
+            //会议室名称
+            private String roomname;
+            //预定时间
+            private Date reservationtime;
+            //会议时间
+            private Date starttime;
+            private Date endtime;
+            //预约者id
+            private Integer reservationistid;
+            //预约者
+            private String reservationistname;
+        
+        ```
+
+    - ```
+        @Autowired
+            private MeetingService meetingService;
+            
+            
+            
+        ```
+
+    - ```
+        <div id="divto">
+                                                <select name="mps" id="selSelectedEmployees" multiple="true">
+                                                </select>
+                                            </div>
+                                            
+                                            
+                                            
+        ```
+
+        待定
 
